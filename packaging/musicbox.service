@@ -1,0 +1,14 @@
+[Unit]
+Description=musicbox
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/musicbox.env
+Restart=always
+RestartSec=2
+ExecStart=/usr/local/bin/musicbox
+
+[Install]
+WantedBy=multi-user.target
+
