@@ -49,6 +49,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /api/v1/player/prev", s.handlePlayerPrev)
 	s.mux.HandleFunc("POST /api/v1/player/seek", s.handlePlayerSeek)
 	s.mux.HandleFunc("POST /api/v1/player/volume", s.handlePlayerVolume)
+	s.mux.HandleFunc("GET /api/v1/queue", s.handleQueueGet)
+	s.mux.HandleFunc("POST /api/v1/queue/add", s.handleQueueAdd)
+	s.mux.HandleFunc("POST /api/v1/queue/clear", s.handleQueueClear)
+	s.mux.HandleFunc("POST /api/v1/queue/remove", s.handleQueueRemove)
 	s.mux.HandleFunc("GET /ws", s.handleWS)
 }
 
