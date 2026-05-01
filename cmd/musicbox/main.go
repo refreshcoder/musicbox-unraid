@@ -15,9 +15,11 @@ import (
 func main() {
 	addr := envOr("MUSICBOX_ADDR", ":8080")
 	staticDir := envOr("MUSICBOX_STATIC_DIR", "web/dist")
+	mpdAddr := os.Getenv("MUSICBOX_MPD_ADDR")
 
 	s, err := httpapi.NewServer(httpapi.Options{
 		StaticDir: staticDir,
+		MPDAddr:   mpdAddr,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -62,4 +64,3 @@ func waitForSignal() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 }
-
