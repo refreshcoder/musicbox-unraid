@@ -42,6 +42,13 @@ func NewServer(opts Options) (*Server, error) {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/v1/status", s.handleStatus)
+	s.mux.HandleFunc("POST /api/v1/player/play", s.handlePlayerPlay)
+	s.mux.HandleFunc("POST /api/v1/player/pause", s.handlePlayerPause)
+	s.mux.HandleFunc("POST /api/v1/player/toggle", s.handlePlayerToggle)
+	s.mux.HandleFunc("POST /api/v1/player/next", s.handlePlayerNext)
+	s.mux.HandleFunc("POST /api/v1/player/prev", s.handlePlayerPrev)
+	s.mux.HandleFunc("POST /api/v1/player/seek", s.handlePlayerSeek)
+	s.mux.HandleFunc("POST /api/v1/player/volume", s.handlePlayerVolume)
 	s.mux.HandleFunc("GET /ws", s.handleWS)
 }
 
