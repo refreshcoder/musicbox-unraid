@@ -4,6 +4,8 @@ import { connectWs } from "../lib/ws";
 import { PlayerBar } from "./PlayerBar";
 import { TabNav } from "./Tabs";
 import type { TabKey } from "./Tabs";
+import { QueueTab } from "./tabs/QueueTab";
+import { BluetoothTab } from "./tabs/BluetoothTab";
 
 type StatusResp = {
   player?: {
@@ -78,9 +80,15 @@ export function App() {
       />
       <TabNav active={tab} onChange={setTab} />
       <main className="mx-auto max-w-5xl px-3 py-4">
-        <div className="rounded-lg border bg-white p-4 text-sm text-gray-700">
-          当前：{tab}
-        </div>
+        {tab === "queue" ? (
+          <QueueTab />
+        ) : tab === "bluetooth" ? (
+          <BluetoothTab />
+        ) : (
+          <div className="rounded-lg border bg-white p-4 text-sm text-gray-700">
+            当前：{tab}
+          </div>
+        )}
       </main>
     </div>
   );
