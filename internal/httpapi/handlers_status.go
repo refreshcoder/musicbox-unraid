@@ -41,7 +41,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 			"connected":  nil,
 		},
 		"tasks": map[string]any{
-			"items": []any{},
+			"items": s.tasks.List(),
 		},
 	})
 }

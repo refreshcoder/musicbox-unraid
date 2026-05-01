@@ -276,3 +276,8 @@ func (c Client) SeekMs(ctx context.Context, positionMs int64) error {
 	_, err := c.cmd(ctx, fmt.Sprintf("seekcur %d", sec))
 	return err
 }
+
+func (c Client) Update(ctx context.Context) error {
+	_, err := c.cmd(ctx, "update")
+	return err
+}

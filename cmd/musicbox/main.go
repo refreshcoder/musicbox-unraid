@@ -16,10 +16,12 @@ func main() {
 	addr := envOr("MUSICBOX_ADDR", ":8080")
 	staticDir := envOr("MUSICBOX_STATIC_DIR", "web/dist")
 	mpdAddr := os.Getenv("MUSICBOX_MPD_ADDR")
+	musicDir := envOr("MUSICBOX_MUSIC_DIR", "/srv/music")
 
 	s, err := httpapi.NewServer(httpapi.Options{
 		StaticDir: staticDir,
 		MPDAddr:   mpdAddr,
+		MusicDir:  musicDir,
 	})
 	if err != nil {
 		log.Fatal(err)

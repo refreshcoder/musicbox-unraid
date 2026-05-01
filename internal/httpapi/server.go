@@ -8,6 +8,7 @@ import (
 
 	"github.com/refreshcoder/musicbox-unraid/internal/bluetooth"
 	"github.com/refreshcoder/musicbox-unraid/internal/mpd"
+	"github.com/refreshcoder/musicbox-unraid/internal/tasks"
 	"github.com/refreshcoder/musicbox-unraid/internal/ws"
 )
 
@@ -21,11 +22,14 @@ type Server struct {
 	btCtl        bluetooth.Ctl
 	btScanning   bool
 	btDefaultMac string
+
+	tasks *tasks.Manager
 }
 
 type Options struct {
 	StaticDir string
 	MPDAddr   string
+	MusicDir  string
 }
 
 func NewServer(opts Options) (*Server, error) {
@@ -37,6 +41,16 @@ func NewServer(opts Options) (*Server, error) {
 		btCtl: bluetooth.Ctl{},
 	}
 	s.mpdReady = opts.MPDAddr != ""
+
+	tm, err := tasks.NewManager(tasks.Options{
+		Runner:   tasks.ExecRunner{},
+		MPD:      func() tasks.MPD { if s.mpdReady { return s.mpd }; return nil }(),
+		MusicDir: opts.MusicDir,
+	})
+	if err != nil {
+		return nil, err
+	}
+	s.tasks = tm
 
 	s.routes()
 
@@ -69,6 +83,9 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /api/v1/bluetooth/devices/{mac}/disconnect", s.handleBluetoothDisconnect)
 	s.mux.HandleFunc("PUT /api/v1/bluetooth/default", s.handleBluetoothDefaultSet)
 	s.mux.HandleFunc("DELETE /api/v1/bluetooth/default", s.handleBluetoothDefaultClear)
+	s.mux.HandleFunc("GET /api/v1/tasks", s.handleTasksList)
+	s.mux.HandleFunc("POST /api/v1/tasks/bv", s.handleTasksBV)
+	s.mux.HandleFunc("POST /api/v1/tasks/{id}/cancel", s.handleTasksCancel)
 	s.mux.HandleFunc("GET /ws", s.handleWS)
 }
 
@@ -81,6 +98,15 @@ func (s *Server) Hub() *ws.Hub {
 }
 
 func (s *Server) Start(ctx context.Context) {
+	go s.tasks.RunWorker(ctx,
+		func(t *tasks.Task) {
+			s.ws.Broadcast(ws.NewEvent("task.update", t))
+		},
+		func(t *tasks.Task) {
+			s.ws.Broadcast(ws.NewEvent("task.done", t))
+		},
+	)
+
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 

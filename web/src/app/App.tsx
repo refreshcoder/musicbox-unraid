@@ -6,11 +6,16 @@ import { TabNav } from "./Tabs";
 import type { TabKey } from "./Tabs";
 import { QueueTab } from "./tabs/QueueTab";
 import { BluetoothTab } from "./tabs/BluetoothTab";
+import { UploadBvTab } from "./tabs/UploadBvTab";
+import type { Task } from "./tabs/UploadBvTab";
 
 type StatusResp = {
   player?: {
     status?: string;
     volume?: number;
+  };
+  tasks?: {
+    items?: Task[];
   };
 };
 
@@ -27,13 +32,21 @@ export function App() {
   const [playerVolume, setPlayerVolume] = useState<number | undefined>(undefined);
   const [posMs, setPosMs] = useState<number>(0);
   const [durMs, setDurMs] = useState<number>(0);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     getJSON<StatusResp>("/api/v1/status")
       .then((st) => {
         setPlayerStatus(st.player?.status);
         setPlayerVolume(st.player?.volume);
+        setTasks((st.tasks?.items ?? []) as Task[]);
       })
+      .catch(() => {});
+  }, []);
+
+  const refreshTasks = useCallback(() => {
+    getJSON<{ items: Task[] }>("/api/v1/tasks")
+      .then((r) => setTasks(r.items ?? []))
       .catch(() => {});
   }, []);
 
@@ -43,6 +56,18 @@ export function App() {
         const p = evt.data as PlayerProgress;
         setPosMs(p.positionMs ?? 0);
         setDurMs(p.durationMs ?? 0);
+        return;
+      }
+      if (evt.type === "task.update" || evt.type === "task.done") {
+        const t = evt.data as Task;
+        setTasks((cur) => {
+          const idx = cur.findIndex((x) => x.id === t.id);
+          if (idx < 0) return [t, ...cur];
+          const next = [...cur];
+          next[idx] = { ...next[idx], ...t };
+          return next;
+        });
+        return;
       }
     });
     wsRef.current = ws;
@@ -82,6 +107,8 @@ export function App() {
       <main className="mx-auto max-w-5xl px-3 py-4">
         {tab === "queue" ? (
           <QueueTab />
+        ) : tab === "upload" ? (
+          <UploadBvTab tasks={tasks} onRefresh={refreshTasks} />
         ) : tab === "bluetooth" ? (
           <BluetoothTab />
         ) : (
