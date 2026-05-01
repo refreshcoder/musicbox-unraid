@@ -26,13 +26,18 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	s.btMu.RLock()
+	btScanning := s.btScanning
+	btDefaultMac := s.btDefaultMac
+	s.btMu.RUnlock()
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"player": player,
 		"queue":  queue,
 		"bluetooth": map[string]any{
-			"scanning":   false,
-			"defaultMac": "",
+			"scanning":   btScanning,
+			"defaultMac": btDefaultMac,
 			"connected":  nil,
 		},
 		"tasks": map[string]any{

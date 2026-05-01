@@ -3,8 +3,10 @@ package httpapi
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
+	"github.com/refreshcoder/musicbox-unraid/internal/bluetooth"
 	"github.com/refreshcoder/musicbox-unraid/internal/mpd"
 	"github.com/refreshcoder/musicbox-unraid/internal/ws"
 )
@@ -14,6 +16,11 @@ type Server struct {
 	ws       *ws.Hub
 	mpd      mpd.Client
 	mpdReady bool
+
+	btMu         sync.RWMutex
+	btCtl        bluetooth.Ctl
+	btScanning   bool
+	btDefaultMac string
 }
 
 type Options struct {
@@ -27,6 +34,7 @@ func NewServer(opts Options) (*Server, error) {
 		mux: mux,
 		ws:  ws.NewHub(),
 		mpd: mpd.Client{Addr: opts.MPDAddr},
+		btCtl: bluetooth.Ctl{},
 	}
 	s.mpdReady = opts.MPDAddr != ""
 
@@ -53,6 +61,14 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /api/v1/queue/add", s.handleQueueAdd)
 	s.mux.HandleFunc("POST /api/v1/queue/clear", s.handleQueueClear)
 	s.mux.HandleFunc("POST /api/v1/queue/remove", s.handleQueueRemove)
+	s.mux.HandleFunc("GET /api/v1/bluetooth/status", s.handleBluetoothStatus)
+	s.mux.HandleFunc("POST /api/v1/bluetooth/scan/start", s.handleBluetoothScanStart)
+	s.mux.HandleFunc("POST /api/v1/bluetooth/scan/stop", s.handleBluetoothScanStop)
+	s.mux.HandleFunc("GET /api/v1/bluetooth/devices", s.handleBluetoothDevices)
+	s.mux.HandleFunc("POST /api/v1/bluetooth/devices/{mac}/connect", s.handleBluetoothConnect)
+	s.mux.HandleFunc("POST /api/v1/bluetooth/devices/{mac}/disconnect", s.handleBluetoothDisconnect)
+	s.mux.HandleFunc("PUT /api/v1/bluetooth/default", s.handleBluetoothDefaultSet)
+	s.mux.HandleFunc("DELETE /api/v1/bluetooth/default", s.handleBluetoothDefaultClear)
 	s.mux.HandleFunc("GET /ws", s.handleWS)
 }
 
