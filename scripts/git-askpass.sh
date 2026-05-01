@@ -2,7 +2,7 @@
 
 case "$1" in
   *Username*)
-    printf "%s" "x-access-token"
+    printf "%s" "refreshcoder"
     ;;
   *Password*)
     printf "%s" "${GITHUB_TOKEN}"
@@ -11,4 +11,3 @@ case "$1" in
     printf "%s" ""
     ;;
 esac
-
